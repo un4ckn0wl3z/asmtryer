@@ -4,3 +4,4 @@
 void ShowProcessListWindow();
 void ShowAssemblyEditorWindow();
 void ShowInjectionControlWindow();
+void ShowRawShellcodeLoaderWindow();

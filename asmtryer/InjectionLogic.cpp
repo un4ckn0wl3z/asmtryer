@@ -162,3 +162,51 @@ void RestoreOriginalContext(DWORD pid) {
     CloseHandle(hThread);
     CloseHandle(hProcess);
 }
+
+// Parses common hex formats: \x90\xCC, 90 cc eb, 9090CCeb1e, etc.
+bool ParseHexString(const std::string& input, std::vector<uint8_t>& output) {
+    output.clear();
+    std::string cleaned;
+
+    for (char c : input) {
+        if (isxdigit(c)) {
+            cleaned += toupper(c);
+        }
+    }
+
+    if (cleaned.empty()) return false;
+
+    // Handle \x escapes if present in original
+    std::string hex;
+    size_t i = 0;
+    std::string orig = input;
+    while (i < orig.length()) {
+        if (orig[i] == '\\' && i + 1 < orig.length() && orig[i + 1] == 'x') {
+            if (i + 3 < orig.length() && isxdigit(orig[i + 2]) && isxdigit(orig[i + 3])) {
+                hex += toupper(orig[i + 2]);
+                hex += toupper(orig[i + 3]);
+                i += 4;
+            }
+            else {
+                i++;
+            }
+        }
+        else if (isxdigit(orig[i])) {
+            hex += toupper(orig[i]);
+            i++;
+        }
+        else {
+            i++;
+        }
+    }
+
+    if (hex.length() % 2 != 0) return false;
+
+    for (size_t j = 0; j < hex.length(); j += 2) {
+        std::string byteStr = hex.substr(j, 2);
+        uint8_t byte = (uint8_t)strtol(byteStr.c_str(), nullptr, 16);
+        output.push_back(byte);
+    }
+
+    return !output.empty();
+}

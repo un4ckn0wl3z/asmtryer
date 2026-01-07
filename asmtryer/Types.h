@@ -19,3 +19,9 @@ struct InjectionData {
     bool injected = false;
     bool hijacked = false;
 };
+
+enum class ShellcodeSource {
+    None,
+    Assembler,
+    RawInput
+};

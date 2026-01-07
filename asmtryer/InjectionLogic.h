@@ -14,3 +14,4 @@ bool AssembleToShellcode(const std::string& assembly, std::vector<uint8_t>& shel
 bool InjectViaThreadHijacking(DWORD pid, const std::vector<uint8_t>& shellcode);
 void RestoreOriginalContext(DWORD pid);
 std::string FormatShellcode(const std::vector<uint8_t>& shellcode);
+bool ParseHexString(const std::string& input, std::vector<uint8_t>& output);
