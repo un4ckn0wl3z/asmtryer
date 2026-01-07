@@ -19,6 +19,7 @@ extern DWORD selectedPid;
 extern char assemblyBuffer[4096];
 extern bool showProcessList;
 extern bool showAssemblyEditor;
+extern bool showRawShellcodeLoader;
 extern bool showInjectionStatus;
 extern bool showAboutModal;
 
@@ -88,6 +89,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
             if (ImGui::BeginMenu("Windows")) {
                 ImGui::MenuItem("Process List", nullptr, &showProcessList);
                 ImGui::MenuItem("Assembly Editor", nullptr, &showAssemblyEditor);
+                ImGui::MenuItem("Raw Shellcode Editor", nullptr, &showRawShellcodeLoader);
                 ImGui::MenuItem("Injection Control", nullptr, &showInjectionStatus);
                 ImGui::EndMenu();
             }

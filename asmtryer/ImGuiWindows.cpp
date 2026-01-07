@@ -5,13 +5,14 @@
 #include "InjectionLogic.h"
 #include <string>
 
-bool showRawShellcodeLoader = true;
+
 ShellcodeSource currentShellcodeSource = ShellcodeSource::None;
 
 DWORD selectedPid = 0;
 char assemblyBuffer[4096] = "inc dword ptr [0x18D46898]\nret";
 bool showProcessList = true;
 bool showAssemblyEditor = true;
+bool showRawShellcodeLoader = true;
 bool showInjectionStatus = true;
 bool showAboutModal = false;
 
