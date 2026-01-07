@@ -1,5 +1,5 @@
 # asmtryer
-Yet Another Shellcode Injector / Thread Hijacking Tool
+Yet Another Shellcode Injector / Thread Hijacking Tool and Assembler playground
 
 ![image](preview.png)
 
