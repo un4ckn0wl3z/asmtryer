@@ -110,7 +110,7 @@ int WINAPI main(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow) {
         if (ImGui::BeginPopupModal("About##modal", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.4f, 1.0f), "[asmtryer] - Hacker Edition");
             ImGui::Separator();
-            ImGui::Text("Version 2.0");
+            ImGui::Text("Version 2.0.1");
             ImGui::Text("x86 / x64 Thread Hijacking Injector");
             ImGui::Text("Powered by:");
             ImGui::BulletText("Dear ImGui");
