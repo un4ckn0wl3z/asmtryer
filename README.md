@@ -1,6 +1,8 @@
 # asmtryer
 Yet Another Shellcode Injector / Thread Hijacking Tool
 
+![image](preview.png)
+
 # Purpose
 
 A lightweight playground for prototyping shellcode and raw assembly, focused on rapid testing rather than production use.
