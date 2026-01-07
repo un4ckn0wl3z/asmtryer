@@ -25,3 +25,8 @@ enum class ShellcodeSource {
     Assembler,
     RawInput
 };
+
+enum class InjectionMethod {
+    ThreadHijacking,
+    CreateRemoteThread
+};

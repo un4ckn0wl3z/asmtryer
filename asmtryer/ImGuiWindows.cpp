@@ -8,6 +8,8 @@
 
 ShellcodeSource currentShellcodeSource = ShellcodeSource::None;
 
+InjectionMethod currentInjectionMethod = InjectionMethod::ThreadHijacking;  // Default
+
 DWORD selectedPid = 0;
 char assemblyBuffer[4096] = "inc dword ptr [0x18D46898]\nret";
 bool showProcessList = true;
@@ -186,17 +188,15 @@ void ShowAssemblyEditorWindow() {
 void ShowInjectionControlWindow() {
     if (!showInjectionStatus) return;
 
-    ImGui::SetNextWindowSize(ImVec2(450, 250), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_FirstUseEver);
     ImGui::Begin("Injection Control", &showInjectionStatus);
 
     ImGui::Text("Target PID: %lu (%s)", selectedPid, currentArch.c_str());
 
-    // Show shellcode source and size
     if (!injectionData.shellcode.empty()) {
         ImGui::Separator();
         ImGui::Text("Loaded Shellcode: %zu bytes", injectionData.shellcode.size());
 
-        // Display source with color
         switch (currentShellcodeSource) {
         case ShellcodeSource::Assembler:
             ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "Source: Assembled from Assembly Editor");
@@ -208,12 +208,23 @@ void ShowInjectionControlWindow() {
             ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Source: Unknown");
             break;
         }
+
+        ImGui::Separator();
+
+        // Injection Method Selector
+        ImGui::Text("Injection Method:");
+        const char* items[] = { "Thread Hijacking", "CreateRemoteThread" };
+        int currentItem = (int)currentInjectionMethod;
+        if (ImGui::Combo("##InjectionMethod", &currentItem, items, IM_ARRAYSIZE(items))) {
+            currentInjectionMethod = (InjectionMethod)currentItem;
+        }
+
+        ImGui::Separator();
     }
     else {
         ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "No shellcode loaded");
+        ImGui::Separator();
     }
-
-    ImGui::Separator();
 
     if (selectedPid > 0) {
         bool canInject = !injectionData.shellcode.empty();
@@ -224,10 +235,21 @@ void ShowInjectionControlWindow() {
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
         }
 
-        if (ImGui::Button("Inject Shellcode", ImVec2(200, 40))) {
+        if (ImGui::Button("Inject Shellcode", ImVec2(250, 50))) {
             if (canInject) {
                 injectionData.targetPid = selectedPid;
-                if (InjectViaThreadHijacking(selectedPid, injectionData.shellcode)) {
+                bool success = false;
+
+                if (currentInjectionMethod == InjectionMethod::ThreadHijacking) {
+                    success = InjectViaThreadHijacking(selectedPid, injectionData.shellcode);
+                    injectionData.hijacked = success;  // Only hijacking sets this flag
+                }
+                else if (currentInjectionMethod == InjectionMethod::CreateRemoteThread) {
+                    success = InjectViaCreateRemoteThread(selectedPid, injectionData.shellcode);
+                    injectionData.hijacked = false;  // CreateRemoteThread doesn't hijack
+                }
+
+                if (success) {
                     injectionData.injected = true;
                     ImGui::OpenPopup("Injection Success");
                 }
@@ -239,7 +261,8 @@ void ShowInjectionControlWindow() {
 
         if (!canInject) ImGui::PopStyleColor(3);
 
-        if (injectionData.hijacked) {
+        // Only show Restore button for Thread Hijacking
+        if (currentInjectionMethod == InjectionMethod::ThreadHijacking && injectionData.hijacked) {
             ImGui::SameLine();
             if (ImGui::Button("Restore Original RIP/EIP")) {
                 RestoreOriginalContext(selectedPid);
@@ -260,11 +283,12 @@ void ShowInjectionControlWindow() {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Not injected");
 
     if (injectionData.hijacked)
-        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Thread hijacked");
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Thread hijacked (active)");
 
-    // Popups remain the same
+    // Popups
     if (ImGui::BeginPopupModal("Injection Success", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Successfully injected shellcode!");
+        ImGui::Text("Successfully injected via %s!",
+            currentInjectionMethod == InjectionMethod::ThreadHijacking ? "Thread Hijacking" : "CreateRemoteThread");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }

